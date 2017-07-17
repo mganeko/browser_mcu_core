@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>mcu core</title>
+   <!--
+    // Browser MCU core sample
+    //   https://github.com/mganeko/browser_mcu_core
+    //   browser_mcu_core is provided under MIT license
+    //
+    //   This sample is using https://github.com/mganeko/browser_mcu_core
+    //
+  -->
+  <script src="js/browser_mcu_core.js"></script>
+</head>
+<body>
+  Browser MCU Core sample<br />
+  <button id="add_video_button"  onclick="addVideo();">Add Video</button>
+  <div>
+    mixed video<br />
+    <canvas id="canvas_mix" width="640x" height="480px" style="border: 1px solid black;" ></canvas>
+  </div>
+  <div id="video_container"></div>
+</body>
+<script>
+  let canvasMix = document.getElementById('canvas_mix');
+  let remoteContainer = document.getElementById('video_container');
+
+  let mcu = new BrowserMCU();
+  function initMcu() {
+      mcu.setCanvas(canvasMix);
+      mcu.setContainer(remoteContainer);
+      mcu.setAudioMode(BrowserMCU.AUDIO_MODE_ALL); //   AUDIO_MODE_NONE, AUDIO_MODE_MINUS_ONE, AUDIO_MODE_ALL
+  }
+
+  let localStreams = [];
+  function addVideo() {
+    getDeviceStream({video: true, audio: true})
+    .then(function (stream) { // success
+      localStreams.push(stream);
+      logStream('localstream', stream);
+      mcu.addRemoteVideo(stream);
+      mcu.addRemoteAudio(stream);
+      
+    }).catch(function (error) { // error
+      console.error('getUserMedia error:', error);
+      return;
+    });
+  }
+
+  function getDeviceStream(option) {
+    if ('getUserMedia' in navigator.mediaDevices) {
+      console.log('navigator.mediaDevices.getUserMadia');
+      return navigator.mediaDevices.getUserMedia(option);
+    }
+    else {
+      console.log('wrap navigator.getUserMadia with Promise');
+      return new Promise(function(resolve, reject){    
+        navigator.getUserMedia(option,
+          resolve,
+          reject
+        );
+      });      
+    }
+  }
+
+  function logStream(msg, stream) {
+    console.log(msg + ': id=' + stream.id);
+
+    let videoTracks = stream.getVideoTracks();
+    if (videoTracks) {
+      console.log('videoTracks.length=' + videoTracks.length);
+      videoTracks.forEach(function(track) {
+        console.log(' track.id=' + track.id);
+      });
+    }
+    
+    let audioTracks = stream.getAudioTracks();
+    if (audioTracks) {
+      console.log('audioTracks.length=' + audioTracks.length);
+      audioTracks.forEach(function(track) {
+        console.log(' track.id=' + track.id);
+      });
+    }
+  }
+
+  // ========== initilaise onload ========
+  initMcu();
+  mcu.startMix();
+  console.log('=== ready ==='); 
+
+</script>
+</html>
