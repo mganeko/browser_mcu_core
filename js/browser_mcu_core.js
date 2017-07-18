@@ -271,8 +271,8 @@ var BrowserMCU = function() {
     _clearMixCanvas();
   }
 
-  this.removeAllRemoteVideoStream = function() {
-    console.log('===== removeAllRemoteVideoStream ======');
+  this.removeAllRemoteVideo = function() {
+    console.log('===== removeAllRemoteVideo ======');
     for(let key in remoteVideos) {
       let video = remoteVideos[key];
       video.pause();
