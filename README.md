@@ -101,7 +101,7 @@ mcu.addRemoteAudio(remoteStream3);
 ### NOTE / 注意
 
 * mixed video will not be updated when window/tab is hidden
-  * window/tab do not have to be shown on headless browser
+  * In headless browser, this is not a restriction
 * ウィンドウ/タブが完全に隠れていると、合成した映像が更新されません
   * ヘッドレスブラウザの場合は、画面が見えなくても問題ありません
 
@@ -115,17 +115,23 @@ mcu.addRemoteAudio(remoteStream3);
 Core Library
 
 - [ ] modify init() with args
+- [ ] add check logic for startMix(), addRemoteVideo(), addRemotoAudio()
+  - [ ] throw exception for error notify  
 - [ ] change canvas size, remote video size, remote video visible/hidden
-- [-] change bandwidth <-- this is not for core library
-- [ ] support multiple video for same peer 
-- [ ] support multiple audio for same peer 
+- [ ] change FPS
+- [ ] change MAX_MEMBER_COUNT
+  - [-] change bandwidth <-- this is not for core library
+- [ ] support flex height for each mix video (2 for split)
+- [ ] support multiple video for same peer
+- [ ] support multiple audio for same peer
 
 Sample page
 
 - [ ] choose camera or make fake video for source
-- [ ] make fake sound for source
+- [ ] make fake audio for source
 - [ ] add / remove source
 - [ ] select audio mode
+- [ ] support multipre output video/audio for AUDIO_MODE_MINUS_ONE mode
 
 
 
