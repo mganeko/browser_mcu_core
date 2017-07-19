@@ -17,14 +17,20 @@
   Browser MCU Core sample<br />
   <button id="add_video_button"  onclick="addVideo();">Add Video</button>
   <div>
-    mixed video<br />
-    <canvas id="canvas_mix" width="640x" height="480px" style="border: 1px solid black;" ></canvas>
+    video mixing canvas<br />
+    <canvas id="canvas_mix" width="640px" height="480px" style="border: 1px solid black;" ></canvas>
   </div>
+  <div>
+    mixed video stream<br />
+    <video id="mix_video" width="320px" height="240px" controls="1" style="border: 1px solid black;" ></video>
+  </div>
+  source video to mix<br />
   <div id="video_container"></div>
 </body>
 <script>
   let canvasMix = document.getElementById('canvas_mix');
   let remoteContainer = document.getElementById('video_container');
+  let mixVideo = document.getElementById('mix_video');
 
   let mcu = new BrowserMCU();
   function initMcu() {
@@ -87,6 +93,10 @@
   // ========== initilaise onload ========
   initMcu();
   mcu.startMix();
+  mixVideo.srcObject = mcu.getMixStream();
+  mixVideo.play();
+  mixVideo.volume = 0;
+  
   console.log('=== ready ==='); 
 
 </script>
