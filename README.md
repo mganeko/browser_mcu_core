@@ -42,7 +42,7 @@
 
 ## Usage / 利用方法
 
-#### Prep
+#### Preparation / 準備
 
 * Load browser_mcu_core.js in HTML
 
@@ -80,22 +80,22 @@
 
 ### Code Samples / コード例
 
-```
-  let mcu = new BrowserMCU();
-  mcu.setCanvas(document.getElementById('mix_canvas'));
-  mcu.setContainer(document.getElementById('video_container');
-  mcu.setAudioMode(BrowserMCU.AUDIO_MODE_ALL); //   AUDIO_MODE_NONE, AUDIO_MODE_MINUS_ONE, AUDIO_MODE_ALL
-  mcu.startMix();
-  let mixStream = mcu.getMixStream();
+```js
+let mcu = new BrowserMCU();
+mcu.setCanvas(document.getElementById('mix_canvas'));
+mcu.setContainer(document.getElementById('video_container');
+mcu.setAudioMode(BrowserMCU.AUDIO_MODE_ALL); //   AUDIO_MODE_NONE, AUDIO_MODE_MINUS_ONE, AUDIO_MODE_ALL
+mcu.startMix();
+let mixStream = mcu.getMixStream();
 
-  mcu.addRemoteVideo(remoteStream1);
-  mcu.addRemoteAudio(remoteStream1);
+mcu.addRemoteVideo(remoteStream1);
+mcu.addRemoteAudio(remoteStream1);
 
-  mcu.addRemoteVideo(remoteStream2);
-  mcu.addRemoteAudio(remoteStream2);
+mcu.addRemoteVideo(remoteStream2);
+mcu.addRemoteAudio(remoteStream2);
 
-  mcu.addRemoteVideo(remoteStream3);
-  mcu.addRemoteAudio(remoteStream3);  
+mcu.addRemoteVideo(remoteStream3);
+mcu.addRemoteAudio(remoteStream3);  
 ```
 
 ### NOTE / 注意
@@ -109,6 +109,23 @@
 
 * Browser MCU Core is under the MIT license
 * Browser MCU Core はMITランセンスで提供されます
+
+## To Do
+
+Core Library
+
+- [ ] modify init() with args
+- [ ] change canvas size, remote video size, remote video visible/hidden
+- [-] change bandwidth <-- this is not for core library
+- [ ] support multiple video for same peer 
+- [ ] support multiple audio for same peer 
+
+Sample page
+
+- [ ] choose camera or make fake video for source
+- [ ] make fake sound for source
+- [ ] add / remove source
+- [ ] select audio mode
 
 
 
