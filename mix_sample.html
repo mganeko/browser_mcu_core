@@ -34,9 +34,23 @@
 
   let mcu = new BrowserMCU();
   function initMcu() {
-      mcu.setCanvas(canvasMix);
-      mcu.setContainer(remoteContainer);
-      mcu.setAudioMode(BrowserMCU.AUDIO_MODE_ALL); //   AUDIO_MODE_NONE, AUDIO_MODE_MINUS_ONE, AUDIO_MODE_ALL
+    // --- init 1 by 1 ----
+    //mcu.setCanvas(canvasMix);
+    //mcu.setContainer(remoteContainer);
+    //mcu.setAudioMode(BrowserMCU.AUDIO_MODE_ALL); //   AUDIO_MODE_NONE, AUDIO_MODE_MINUS_ONE, AUDIO_MODE_ALL
+      
+    // --- init at once ---
+    mcu.init(canvasMix, remoteContainer, BrowserMCU.AUDIO_MODE_ALL);
+    
+    // --- set frame rate --
+    //mcu.setFrameRate(30);
+    mcu.setFrameRate(15);
+    //mcu.setFrameRate(1);
+
+    // --- hide remove video ---
+    //mcu.hideRemoteVideo(true);
+    
+    //mcu.setRemoteVideoUnit(10); // No effect
   }
 
   let localStreams = [];

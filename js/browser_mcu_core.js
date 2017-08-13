@@ -10,9 +10,13 @@
 // --- MCU core tasks --
 //  - re-write README.md
 //  DONE - clean up, when member reloded (server)
-//  - modify init() with args
-//  - change canvas size, remote video size, remote video visible/hidden
-//  - change bandwidth
+//  DONE - modify init() with args
+//  NOT HERE. Canvas will be given from outside. - change canvas size
+//  NO EFFECT: - change remote video size
+//  - remote video visible/hidden
+//  DONE - chage FPS
+//  - support horz/vert count flexible (2x1, 3x2, 4x3, 5x4)
+//  NOT HERE. should be done with PeerConnection.  - change bandwidth
 //  - support multiple video for same peer 
 //  - support multiple audio for same peer
 
@@ -51,6 +55,13 @@ var BrowserMCU = function() {
   let keepAnimation = false;
   let mixWidth = 320;
   let mixHeight = 240;
+  let remoteVideoWidthRate = 16; // 16:9
+  let remoteVideoHeightRate = 9; // 16:9
+  let remoteVideoUnit = 20; // NOTE: seems no effect
+    // remoteVideoWidth = remoteVideoWidthRate*remoteVideoUnit = 16*20 = 320
+    // remoteVideoHeight = remoteVideoHeightRate*remoteVideoUnit = 9*20 = 180
+  let frameRate = MIX_CAPTURE_FPS; // Frame per second
+  let hideRemoteVideoFlag = false; // Hide Remote Video
 
   // -- for audio mix --
   //const _AUDIO_MODE_NONE = 0;
@@ -83,9 +94,31 @@ var BrowserMCU = function() {
     audioMode = mode;
   }
 
+  // --- init at once ---
+  this.init = function(canvas, container, mode) {
+    this.setCanvas(canvas);
+    this.setContainer(container);
+    this.setAudioMode(mode);
+  }
+
+  // -- set Frame Rate (FPS) --
+  this.setFrameRate = function(rate) {
+    frameRate = rate;
+  }
+
+  // NOTE: seems no effect
+  this.setRemoteVideoUnit = function(unit) {
+    remoteVideoUnit = unit;
+  }
+
+  this.hideRemoteVideo = function(hideFlag) {
+    hideRemoteVideoFlag = hideFlag;
+  }
+
   // --- start/stop Mix ----
   this.startMix = function() {
-    mixStream = canvasMix.captureStream(MIX_CAPTURE_FPS);
+    //mixStream = canvasMix.captureStream(MIX_CAPTURE_FPS);
+    mixStream = canvasMix.captureStream(frameRate);
     if (audioMode === BrowserMCU.AUDIO_MODE_ALL) {
       mixAllOutputNode = audioContext.createMediaStreamDestination();
       audioMixAllStream = mixAllOutputNode.stream;
@@ -165,6 +198,7 @@ var BrowserMCU = function() {
     const horzUnit = video.videoWidth / 4;
     const vertUnit = video.videoHeight / 3;
     let unit = 240;
+    //let unit = 1; // No effect
 
     if (horzUnit > vertUnit) {
       // -- landscape, so clip side --
@@ -227,12 +261,20 @@ var BrowserMCU = function() {
 
   this.addRemoteVideo = function(stream) {
     let remoteVideo = document.createElement('video');
-    remoteVideo.id = "remotevideo_" + stream.id;
-    remoteVideo.style.border = "1px solid black";
-    remoteVideo.style.width = "320px"; // 16x20; //"480px"; // 16x30
-    remoteVideo.style.height = "180px"; // 9x20; //"270px"; // 9x30
+    remoteVideo.id = 'remotevideo_' + stream.id;
+    remoteVideo.style.border = '1px solid black';
+    //remoteVideo.style.width = "320px"; // 16x20; //"480px"; // 16x30
+    //remoteVideo.style.height = "180px"; // 9x20; //"270px"; // 9x30
+    remoteVideo.style.width = remoteVideoWidthRate * remoteVideoUnit + 'px'; 
+    remoteVideo.style.height = remoteVideoHeightRate * remoteVideoUnit + 'px'; 
+
     // to hide :: remoteVideo.style.display = 'none'; // for Chrome (hidden NG)
+    if (hideRemoteVideoFlag) {
+      // -- hide remote video --
+      remoteVideo.style.display = 'none'; // for Chrome (hidden NG)
+    }
     //remoteVideo.controls = true;
+
     remoteVideo.srcObject = stream;
     videoContainer.appendChild(remoteVideo);
     remoteVideo.volume = 0;
@@ -303,35 +345,6 @@ var BrowserMCU = function() {
     }
     else if (audioMode === BrowserMCU.AUDIO_MODE_MINUS_ONE) {
       console.warn('DO NOT use addRemoteAudio() on BrowserMCU.AUDIO_MODE_MINUS_ONE');
-
-      /*-----
-      // -- prepare outputNode for this, connect other inputs ---
-      let newOutputNode = audioContext.createMediaStreamDestination();
-      let newAudioMixStream = newOutputNode.stream;
-      minusOneOutputNodes[stream.id] = newOutputNode;
-      minusOneStreams[stream.id] = newAudioMixStream;
-      for (let key in inputNodes) {
-        if (key === stream.id) {
-          console.log('skip input(id=' + key + ') because same id=' + stream.id);
-        }
-        else {
-          console.log('connect input(id=' + key + ') to this output');
-          let otherMicNode = inputNodes[key];
-          otherMicNode.connect(newOutputNode);
-        }
-      }
-
-      // -- connect this node to other outputs --
-      for (let key in minusOneOutputNodes) {
-          if (key === stream.id) {
-            console.log('skip output(id=' + key + ') because same id=' + stream.id);
-          }
-          else {
-            let otherOutputNode = minusOneOutputNodes[key];
-            remoteNode.connect(otherOutputNode);
-        }
-      }
-      ---*/
     }
     else if (audioMode === BrowserMCU.AUDIO_MODE_NONE) {
       // AUDIO_MODE_NONE
