@@ -13,10 +13,11 @@
 //  DONE - modify init() with args
 //  NOT HERE. Canvas will be given from outside. - change canvas size
 //  NO EFFECT: - change remote video size
-//  - remote video visible/hidden
+//  DONE - remote video visible/hidden
 //  DONE - chage FPS
-//  - support horz/vert count flexible (2x1, 3x2, 4x3, 5x4)
+//  DONE - support horz/vert count flexible (2x1, 3x2, 4x3, 5x4)
 //  NOT HERE. should be done with PeerConnection.  - change bandwidth
+//
 //  - support multiple video for same peer 
 //  - support multiple audio for same peer
 
