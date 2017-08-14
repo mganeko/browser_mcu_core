@@ -17,6 +17,7 @@
 //  DONE - chage FPS
 //  DONE - support horz/vert count flexible (2x1, 3x2, 4x3, 5x4)
 //  NOT HERE. should be done with PeerConnection.  - change bandwidth
+//  - support free size Canvas
 //
 //  - support multiple video for same peer 
 //  - support multiple audio for same peer

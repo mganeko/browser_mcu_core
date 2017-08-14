@@ -64,9 +64,10 @@
 * when AUDIO_MODE_NONE
   * call addRemoteVideo()
 * when AUDIO_MODE_ALL
-  * call addRemoteAudio()
+  * call addRemoteVideo()
   * call addRemoteAudio()
 * when AUDIO_MODE_MINUS_ONE
+  * call addRemoteVideo()
   * call prepareMinusOneStream() for each peer (stream)
   * call addRemoteAudio()
   * call addRemoteAudioMinusOne()
@@ -98,6 +99,21 @@ mcu.addRemoteVideo(remoteStream3);
 mcu.addRemoteAudio(remoteStream3);  
 ```
 
+or
+
+```js
+let mcu = new BrowserMCU();
+mcu.init(
+  document.getElementById('mix_canvas'),
+  document.getElementById('video_container',
+  BrowserMCU.AUDIO_MODE_ALL
+);
+
+mcu.startMix();
+let mixStream = mcu.getMixStream();
+```
+
+
 ### NOTE / 注意
 
 * mixed video will not be updated when window/tab is hidden
@@ -114,14 +130,15 @@ mcu.addRemoteAudio(remoteStream3);
 
 Core Library
 
-- [ ] modify init() with args
+- [x] modify init() with args
 - [ ] add check logic for startMix(), addRemoteVideo(), addRemotoAudio()
   - [ ] throw exception for error notify  
-- [ ] change canvas size, remote video size, remote video visible/hidden
-- [ ] change FPS
-- [ ] change MAX_MEMBER_COUNT
-  - [-] change bandwidth <-- this is not for core library
-- [ ] support flex height for each mix video (2 for split)
+- [x] change remote video size, remote video visible/hidden
+- [x] change FPS
+- [ ] check max video/audio count 
+- [-] change bandwidth <-- this is not for core library
+- [x] support flex height for each mix video (2 for split)
+- [ ] support free size canvas
 - [ ] support multiple video for same peer
 - [ ] support multiple audio for same peer
 
