@@ -39,7 +39,7 @@
 
 var BrowserMCU = function() {
   // --- for video mix ---
-  const MAX_MEMBER_COUNT = 25;
+  const MAX_MEMBER_COUNT = 36;
   let remoteStreams = [];
   let remoteVideos = [];
   let mixStream = null;
@@ -194,11 +194,16 @@ var BrowserMCU = function() {
   }
 
   function _drawVideoGridWithClop(ctx, video, destLeft, destTop, gridWidth, gridHeight) {
+    const gridRatio = gridWidth / gridHeight;
+    const gridRatioAdjust = gridRatio / (4 / 3);
+    //console.log('gridRatio=' + gridRatio + '  adjust=' + gridRatioAdjust);
+
     // === make 4:3 area ====
-    const horzUnit = video.videoWidth / 4;
+    //const horzUnit = video.videoWidth / 4;
+    //const vertUnit = video.videoHeight / 3;
+    const horzUnit = video.videoWidth / 4 / gridRatioAdjust;
     const vertUnit = video.videoHeight / 3;
     let unit = 240;
-    //let unit = 1; // No effect
 
     if (horzUnit > vertUnit) {
       // -- landscape, so clip side --
@@ -209,7 +214,7 @@ var BrowserMCU = function() {
       unit = horzUnit;
     }
 
-    const srcWidth = unit * 4;
+    const srcWidth = unit * 4 * gridRatioAdjust;
     const srcHeight = unit * 3;
     const xCenter = video.videoWidth / 2;
     const yCenter =  video.videoHeight / 2;
@@ -227,23 +232,53 @@ var BrowserMCU = function() {
   let vertCount = 1;
   let gridWidth = 640;
   let gridHeight =480;
+
+  // --- frexible vert --- horz/vert count flexible (2x1, 3x2, 4x3, 5x4)
   function _calcGridHorzVert() {
     memberCount = _getRemoteVideoCount();
-    if (memberCount > 16) {
+    if (memberCount > MAX_MEMBER_COUNT) {
+      console.warn('TOO MANY mebers. max=' + MAX_MEMBER_COUNT);
+    }
+
+    if (memberCount > 30) {
+      horzCount = 6;
+      vertCount = 6;
+    }
+    else if (memberCount > 25) {
+      horzCount = 6;
+      vertCount = 5;
+    }
+    else if (memberCount > 20) {
       horzCount = 5;
       vertCount = 5;
     }
-    else if (memberCount > 9) {
+    else if (memberCount > 16) {
+      horzCount = 5;
+      vertCount = 4;
+    }
+    else if (memberCount > 12) {
       horzCount = 4;
       vertCount = 4;
     }
-    else if (memberCount > 4) {
+    else if (memberCount > 9) {
+      horzCount = 4;
+      vertCount = 3;
+    }
+    else if (memberCount > 6) {
       horzCount = 3;
       vertCount = 3;
     }
-    else if (memberCount > 1) {
+    else if (memberCount > 4) {
+      horzCount = 3;
+      vertCount = 2;
+    }
+    else if (memberCount > 2) {
       horzCount = 2;
       vertCount = 2;
+    }
+    else if (memberCount > 1) {
+      horzCount = 2;
+      vertCount = 1;
     }
     else  {
       horzCount = 1;
