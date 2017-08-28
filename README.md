@@ -3,12 +3,12 @@
 * Browser MCU Core is MCU library using a browser for video/audio processing
 * Browser MCU Core is designed for MediaStreams from WebRTC
 * Signaling and handling of PeerConnection are not a part of Browser_MCU Core
-* Browser MCU Core is a part of Browse MCU Series
+* Browser MCU Core is a part of [Browser MCU Series](https://github.com/mganeko/browser_mcu)
 * --
 * Browser MCU Core はブラウザの映像/音声処理を活用した、MCUライブラリです
 * Browser MCU Core は WebRTC でやり取りする MediaStream を扱うために作成されています
 * シグナリングや PeerConnection の処理は、Browser MCU Core には含まれていません
-* Browser MCU Core は Browse MCU シリーズの一部です
+* Browser MCU Core は [Browse MCU シリーズ]((https://github.com/mganeko/browser_mcu))の一部です
 
 ## Confirmed Environment / 動作確認環境
 
