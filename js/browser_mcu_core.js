@@ -297,6 +297,14 @@ var BrowserMCU = function() {
   }
 
   this.addRemoteVideo = function(stream) {
+    // --- check for double add ---
+    const videoId = "remotevideo_" + stream.id;
+    let existRemoteVideo = document.getElementById(videoId); //'remotevideo_' + event.stream.id);
+    if (existRemoteVideo) {
+      console.warn('remote video ALREADY EXIST stream.id=' + stream.id);
+      return;
+    }
+
     let remoteVideo = document.createElement('video');
     remoteVideo.id = 'remotevideo_' + stream.id;
     remoteVideo.style.border = '1px solid black';
@@ -373,6 +381,20 @@ var BrowserMCU = function() {
   // --- handling remote audio ---
   this.addRemoteAudio = function(stream) {
     console.log('addRemoteAudio()');
+
+    if (audioMode === BrowserMCU.AUDIO_MODE_NONE) {
+      // AUDIO_MODE_NONE
+      console.log('BrowserMCU.AUDIO_MODE_NONE: ignore remote audio');
+      return;
+    }
+
+    // --- check for double add ---
+    let existRemoteNode = inputNodes[stream.id];
+    if (existRemoteNode) {
+      console.warn('remote audio node ALREADY EXIST stream.id=' + stream.id);
+      return;
+    }
+
     let remoteNode = audioContext.createMediaStreamSource(stream);
     inputNodes[stream.id] = remoteNode;
 
