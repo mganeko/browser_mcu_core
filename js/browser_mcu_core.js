@@ -196,15 +196,21 @@ var BrowserMCU = function() {
   }
 
   function _drawVideoGridWithClop(ctx, video, destLeft, destTop, gridWidth, gridHeight) {
+    //const HORZ_RATIO = 4;
+    //const VERT_RATIO = 3;
+    const HORZ_RATIO = 1;
+    const VERT_RATIO = 1;
     const gridRatio = gridWidth / gridHeight;
-    const gridRatioAdjust = gridRatio / (4 / 3);
+    //const gridRatioAdjust = gridRatio / (HORZ_RATIO / VERT_RATIO);
     //console.log('gridRatio=' + gridRatio + '  adjust=' + gridRatioAdjust);
 
     // === make 4:3 area ====
     //const horzUnit = video.videoWidth / 4;
     //const vertUnit = video.videoHeight / 3;
-    const horzUnit = video.videoWidth / 4 / gridRatioAdjust;
-    const vertUnit = video.videoHeight / 3;
+    //const horzUnit = video.videoWidth / HORZ_RATIO / gridRatioAdjust;
+    //const vertUnit = video.videoHeight / VERT_RATIO;
+    const horzUnit = video.videoWidth * gridRatio;
+    const vertUnit = video.videoHeight;
     let unit = 240;
 
     if (horzUnit > vertUnit) {
@@ -216,8 +222,13 @@ var BrowserMCU = function() {
       unit = horzUnit;
     }
 
-    const srcWidth = unit * 4 * gridRatioAdjust;
-    const srcHeight = unit * 3;
+    //const srcWidth = unit * HORZ_RATIO * gridRatioAdjust; // OK
+    //const srcWidth = unit * gridRatio * VERT_RATIO; // OK
+    //const srcHeight = unit * VERT_RATIO; // OK
+    const srcWidth = unit * gridRatio; // OK
+    const srcHeight = unit; // OK
+    //const srcWidth = gridRatio; // NG
+    //const srcHeight = 1; // NG
     const xCenter = video.videoWidth / 2;
     const yCenter =  video.videoHeight / 2;
     const srcLeft = xCenter - (srcWidth /2);
