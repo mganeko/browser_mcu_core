@@ -209,18 +209,19 @@ var BrowserMCU = function() {
     //const vertUnit = video.videoHeight / 3;
     //const horzUnit = video.videoWidth / HORZ_RATIO / gridRatioAdjust;
     //const vertUnit = video.videoHeight / VERT_RATIO;
-    const horzUnit = video.videoWidth * gridRatio;
-    const vertUnit = video.videoHeight;
-    let unit = 240;
+    //const horzUnit = video.videoWidth; // TEST * gridRatio;
+    //const vertUnit = video.videoHeight;
+    let unit = 240; // ANY Number is OK
 
-    if (horzUnit > vertUnit) {
-      // -- landscape, so clip side --
-      unit = vertUnit;
-    }
-    else {
-      // --- portrait, so cut top/bottom -- 
-      unit = horzUnit;
-    }
+    //if (horzUnit > vertUnit) {
+    //  // -- landscape, so clip side --
+    //  unit = vertUnit;
+    //}
+    //else {
+    //  // --- portrait, so cut top/bottom -- 
+    //  unit = horzUnit;
+    //}
+    //unit = 1; // test 100 OK, 1 OK
 
     //const srcWidth = unit * HORZ_RATIO * gridRatioAdjust; // OK
     //const srcWidth = unit * gridRatio * VERT_RATIO; // OK
@@ -253,6 +254,7 @@ var BrowserMCU = function() {
       console.warn('TOO MANY mebers. max=' + MAX_MEMBER_COUNT);
     }
 
+    /*-- 
     if (memberCount > 30) {
       horzCount = 6;
       vertCount = 6;
@@ -297,9 +299,165 @@ var BrowserMCU = function() {
       horzCount = 1;
       vertCount = 1;
     }
+    --*/
+
+    // -- Fix calc rule for 4x3 canvas --
+    //_calcGridHorzVertNormal();
+
+    // -- flexible calc rule for flex canvas ---
+    _calcGridHorzVertFlex();
 
     gridWidth = mixWidth / horzCount;
     gridHeight = mixHeight / vertCount;
+  }
+
+  function _calcGridHorzVertNormal() {
+    if (memberCount > 30) {
+      horzCount = 6;
+      vertCount = 6;
+    }
+    else if (memberCount > 25) {
+      horzCount = 6;
+      vertCount = 5;
+    }
+    else if (memberCount > 20) {
+      horzCount = 5;
+      vertCount = 5;
+    }
+    else if (memberCount > 16) {
+      horzCount = 5;
+      vertCount = 4;
+    }
+    else if (memberCount > 12) {
+      horzCount = 4;
+      vertCount = 4;
+    }
+    else if (memberCount > 9) {
+      horzCount = 4;
+      vertCount = 3;
+    }
+    else if (memberCount > 6) {
+      horzCount = 3;
+      vertCount = 3;
+    }
+    else if (memberCount > 4) {
+      horzCount = 3;
+      vertCount = 2;
+    }
+    else if (memberCount > 2) {
+      horzCount = 2;
+      vertCount = 2;
+    }
+    else if (memberCount > 1) {
+      horzCount = 2;
+      vertCount = 1;
+    }
+    else  {
+      horzCount = 1;
+      vertCount = 1;
+    }
+  }
+
+  function _calcGridHorzVertFlex() {
+    const HORZ_MODULATE = (3.0 / 4.0);
+    let tmpHorzCount = 1;
+    let tmpVertCount = 1;
+    while (memberCount > tmpHorzCount * tmpVertCount) {
+      let horzExtendHorzCount = tmpHorzCount + 1;
+      let horzExtendVertCount = tmpVertCount;
+      let horzExtendRatio = (mixWidth / horzExtendHorzCount) / (mixHeight / horzExtendVertCount);
+      let vertExtendHorzCount = tmpHorzCount;
+      let vertExtendVertCount = tmpVertCount + 1;
+      let vertExtendRatio = (mixHeight / vertExtendVertCount) / (mixWidth / vertExtendHorzCount);
+      if (horzExtendRatio * HORZ_MODULATE >=  vertExtendRatio) {
+        tmpHorzCount = horzExtendHorzCount;
+        tmpVertCount = horzExtendVertCount;
+        if (memberCount <= tmpHorzCount * (tmpVertCount - 1)) {
+          tmpVertCount = tmpVertCount - 1;
+        }
+      }
+      else {
+        tmpHorzCount = vertExtendHorzCount;
+        tmpVertCount = vertExtendVertCount;
+        if (memberCount <= (tmpHorzCount - 1) * tmpVertCount) {
+          tmpHorzCount = tmpHorzCount - 1;
+        }
+      }
+    }
+
+    horzCount = tmpHorzCount;
+    vertCount = tmpVertCount;
+    return;
+
+    /*-- Not BAD, but not good --
+    //const MIN_RATIO = 2.0 / 3.0;
+    const MIN_RATIO = 3.0 / 4.1;
+     //9.0 / 16.0; //0.5; // (w/h)
+
+    let tmpHorzCount = 1;
+    let tmpVertCount = 1;
+    let tmpCount = tmpHorzCount * tmpVertCount;
+    while (memberCount > tmpCount) {
+      let nextHorzCount = tmpHorzCount + 1;
+      let nextVertCount =  tmpVertCount;
+      let nextWidth = mixWidth / nextHorzCount;
+      let nextHeight = mixHeight / nextVertCount;
+      let nextRatio = nextWidth / nextHeight;
+      if (nextRatio >= MIN_RATIO) {
+        tmpHorzCount = nextHorzCount;
+        tmpVertCount = nextVertCount;
+      }
+      else {
+        tmpHorzCount = tmpHorzCount - 1;
+        tmpVertCount = tmpVertCount + 1;
+      }
+      tmpCount = tmpHorzCount * tmpVertCount;
+    }
+
+    horzCount = tmpHorzCount;
+    vertCount = tmpVertCount;
+    return;
+    ---*/
+
+    /*-- 4, 2 for 6 --
+    let tmpHorzCount = memberCount;
+    let tmpVertCount = 1;
+    let tmptWidth = mixWidth / tmpHorzCount;
+    let tmpHeight = mixHeight / tmpVertCount;
+    let tmpRatio = tmptWidth / tmpHeight;
+    while ( (tmpRatio < MIN_RATIO) && (tmpHorzCount > 1) ) {
+      tmpHorzCount--;
+      while (tmpHorzCount * tmpVertCount < memberCount) {
+        tmpVertCount++;
+      }
+      if ( ((tmpHorzCount - 1 ) * tmpVertCount) >= memberCount) {
+        tmpHorzCount--;
+      }
+
+      tmptWidth = mixWidth / tmpHorzCount;
+      tmpHeight = mixHeight / tmpVertCount;
+      tmpRatio = tmptWidth / tmpHeight;
+    }
+    horzCount = tmpHorzCount;
+    vertCount = tmpVertCount;
+    return;
+    --*/
+
+
+    /*--- NG
+    const rootNumber = Math.sqrt(memberCount);
+    let horzNumber = rootNumber * ratio
+    let vertNumber = rootNumber / ratio;
+    horzCount = Math.floor(horzNumber + 0.5);
+    vertCount = Math.floor(vertNumber + 0.5);
+    console.log('_calcGridHorzVertWide() memberCount=' + memberCount + ', rootNumber=' + rootNumber +
+     ', horzNumber=' + horzNumber + ', vertNumber=' + vertNumber + ', horzCount=' + horzCount + ', vertCount='+ vertCount);
+    if (horzCount * vertCount < memberCount) {
+      console.warn('TOO few---');
+    }
+    return;
+    --*/
+
   }
 
   // ------- handling remote video --------------
