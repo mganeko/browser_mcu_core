@@ -48,20 +48,19 @@ var BrowserMCU = function() {
   let videoContainer = null;
   
   const MIX_CAPTURE_FPS = 15;
-  //const canvasMix = document.getElementById('canvas_mix');
-  //const ctxMix = canvasMix.getContext('2d');
-  //ctxMix.fillStyle = 'rgb(128, 128, 255)';
   let canvasMix = null;
   let ctxMix = null;
   let animationId = null;
   let keepAnimation = false;
+
   let mixWidth = 320;
   let mixHeight = 240;
-  let remoteVideoWidthRate = 16; // 16:9
-  let remoteVideoHeightRate = 9; // 16:9
+  //let remoteVideoWidthRate = 16; // 16:9
+  //let remoteVideoHeightRate = 9; // 16:9
+  let remoteVideoWidthRate = 4; // 4:3
+  let remoteVideoHeightRate = 3; // 4:3
   let remoteVideoUnit = 20; // NOTE: seems no effect
-    // remoteVideoWidth = remoteVideoWidthRate*remoteVideoUnit = 16*20 = 320
-    // remoteVideoHeight = remoteVideoHeightRate*remoteVideoUnit = 9*20 = 180
+
   let frameRate = MIX_CAPTURE_FPS; // Frame per second
   let hideRemoteVideoFlag = false; // Hide Remote Video
 
@@ -119,7 +118,6 @@ var BrowserMCU = function() {
 
   // --- start/stop Mix ----
   this.startMix = function() {
-    //mixStream = canvasMix.captureStream(MIX_CAPTURE_FPS);
     mixStream = canvasMix.captureStream(frameRate);
     if (audioMode === BrowserMCU.AUDIO_MODE_ALL) {
       mixAllOutputNode = audioContext.createMediaStreamDestination();
@@ -201,35 +199,12 @@ var BrowserMCU = function() {
     const HORZ_RATIO = 1;
     const VERT_RATIO = 1;
     const gridRatio = gridWidth / gridHeight;
-    //const gridRatioAdjust = gridRatio / (HORZ_RATIO / VERT_RATIO);
-    //console.log('gridRatio=' + gridRatio + '  adjust=' + gridRatioAdjust);
 
     // === make 4:3 area ====
-    //const horzUnit = video.videoWidth / 4;
-    //const vertUnit = video.videoHeight / 3;
-    //const horzUnit = video.videoWidth / HORZ_RATIO / gridRatioAdjust;
-    //const vertUnit = video.videoHeight / VERT_RATIO;
-    //const horzUnit = video.videoWidth; // TEST * gridRatio;
-    //const vertUnit = video.videoHeight;
     let unit = 240; // ANY Number is OK
 
-    //if (horzUnit > vertUnit) {
-    //  // -- landscape, so clip side --
-    //  unit = vertUnit;
-    //}
-    //else {
-    //  // --- portrait, so cut top/bottom -- 
-    //  unit = horzUnit;
-    //}
-    //unit = 1; // test 100 OK, 1 OK
-
-    //const srcWidth = unit * HORZ_RATIO * gridRatioAdjust; // OK
-    //const srcWidth = unit * gridRatio * VERT_RATIO; // OK
-    //const srcHeight = unit * VERT_RATIO; // OK
     const srcWidth = unit * gridRatio; // OK
     const srcHeight = unit; // OK
-    //const srcWidth = gridRatio; // NG
-    //const srcHeight = 1; // NG
     const xCenter = video.videoWidth / 2;
     const yCenter =  video.videoHeight / 2;
     const srcLeft = xCenter - (srcWidth /2);
@@ -253,53 +228,6 @@ var BrowserMCU = function() {
     if (memberCount > MAX_MEMBER_COUNT) {
       console.warn('TOO MANY mebers. max=' + MAX_MEMBER_COUNT);
     }
-
-    /*-- 
-    if (memberCount > 30) {
-      horzCount = 6;
-      vertCount = 6;
-    }
-    else if (memberCount > 25) {
-      horzCount = 6;
-      vertCount = 5;
-    }
-    else if (memberCount > 20) {
-      horzCount = 5;
-      vertCount = 5;
-    }
-    else if (memberCount > 16) {
-      horzCount = 5;
-      vertCount = 4;
-    }
-    else if (memberCount > 12) {
-      horzCount = 4;
-      vertCount = 4;
-    }
-    else if (memberCount > 9) {
-      horzCount = 4;
-      vertCount = 3;
-    }
-    else if (memberCount > 6) {
-      horzCount = 3;
-      vertCount = 3;
-    }
-    else if (memberCount > 4) {
-      horzCount = 3;
-      vertCount = 2;
-    }
-    else if (memberCount > 2) {
-      horzCount = 2;
-      vertCount = 2;
-    }
-    else if (memberCount > 1) {
-      horzCount = 2;
-      vertCount = 1;
-    }
-    else  {
-      horzCount = 1;
-      vertCount = 1;
-    }
-    --*/
 
     // -- Fix calc rule for 4x3 canvas --
     //_calcGridHorzVertNormal();
@@ -388,76 +316,6 @@ var BrowserMCU = function() {
     horzCount = tmpHorzCount;
     vertCount = tmpVertCount;
     return;
-
-    /*-- Not BAD, but not good --
-    //const MIN_RATIO = 2.0 / 3.0;
-    const MIN_RATIO = 3.0 / 4.1;
-     //9.0 / 16.0; //0.5; // (w/h)
-
-    let tmpHorzCount = 1;
-    let tmpVertCount = 1;
-    let tmpCount = tmpHorzCount * tmpVertCount;
-    while (memberCount > tmpCount) {
-      let nextHorzCount = tmpHorzCount + 1;
-      let nextVertCount =  tmpVertCount;
-      let nextWidth = mixWidth / nextHorzCount;
-      let nextHeight = mixHeight / nextVertCount;
-      let nextRatio = nextWidth / nextHeight;
-      if (nextRatio >= MIN_RATIO) {
-        tmpHorzCount = nextHorzCount;
-        tmpVertCount = nextVertCount;
-      }
-      else {
-        tmpHorzCount = tmpHorzCount - 1;
-        tmpVertCount = tmpVertCount + 1;
-      }
-      tmpCount = tmpHorzCount * tmpVertCount;
-    }
-
-    horzCount = tmpHorzCount;
-    vertCount = tmpVertCount;
-    return;
-    ---*/
-
-    /*-- 4, 2 for 6 --
-    let tmpHorzCount = memberCount;
-    let tmpVertCount = 1;
-    let tmptWidth = mixWidth / tmpHorzCount;
-    let tmpHeight = mixHeight / tmpVertCount;
-    let tmpRatio = tmptWidth / tmpHeight;
-    while ( (tmpRatio < MIN_RATIO) && (tmpHorzCount > 1) ) {
-      tmpHorzCount--;
-      while (tmpHorzCount * tmpVertCount < memberCount) {
-        tmpVertCount++;
-      }
-      if ( ((tmpHorzCount - 1 ) * tmpVertCount) >= memberCount) {
-        tmpHorzCount--;
-      }
-
-      tmptWidth = mixWidth / tmpHorzCount;
-      tmpHeight = mixHeight / tmpVertCount;
-      tmpRatio = tmptWidth / tmpHeight;
-    }
-    horzCount = tmpHorzCount;
-    vertCount = tmpVertCount;
-    return;
-    --*/
-
-
-    /*--- NG
-    const rootNumber = Math.sqrt(memberCount);
-    let horzNumber = rootNumber * ratio
-    let vertNumber = rootNumber / ratio;
-    horzCount = Math.floor(horzNumber + 0.5);
-    vertCount = Math.floor(vertNumber + 0.5);
-    console.log('_calcGridHorzVertWide() memberCount=' + memberCount + ', rootNumber=' + rootNumber +
-     ', horzNumber=' + horzNumber + ', vertNumber=' + vertNumber + ', horzCount=' + horzCount + ', vertCount='+ vertCount);
-    if (horzCount * vertCount < memberCount) {
-      console.warn('TOO few---');
-    }
-    return;
-    --*/
-
   }
 
   // ------- handling remote video --------------
