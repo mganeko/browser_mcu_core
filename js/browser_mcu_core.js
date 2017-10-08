@@ -116,6 +116,16 @@ var BrowserMCU = function() {
     hideRemoteVideoFlag = hideFlag;
   }
 
+  // --- change canvas sise ---
+  this.updateCanvasSize = function() {
+    if (canvasMix) {
+      mixWidth = canvasMix.width;
+      mixHeight = canvasMix.height;
+
+      _calcGridHorzVert();
+    }
+  }
+
   // --- start/stop Mix ----
   this.startMix = function() {
     mixStream = canvasMix.captureStream(frameRate);
