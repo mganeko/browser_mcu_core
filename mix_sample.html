@@ -16,9 +16,33 @@
 <body>
   Browser MCU Core sample<br />
   <button id="add_video_button"  onclick="addVideo();">Add Video</button>
+  <button id="remove_video_button"  onclick="removeVideo();">Remove Video</button>
+  &nbsp;
+  <button id="stop_all_button"  onclick="stopAll();">Stop All</button>  
   <div>
-    video mixing canvas<br />
+    video mixing canvas
+    <select id="canvas_size_select" onchange="canvasSizeSelectChanged()">
+      <option selected="1" value="640x480">640x480 (4:3)</option>
+      <option value="800x450">800x450 (16:9)</option>
+      <option value="800x400">800x450 (2:1)</option>
+      <option value="750x250">750x250 (3:1)</option>
+      <option value="480x480">480x480 (1:1)</option>
+      <option value="360x480">360x480 (3:4)</option>
+      <option value="270x480">270x480 (9:16)</option>
+      <option value="240x480">240x480 (1:2)</option>
+      <option value="180x450">180x450 (2:5)</option>
+    </select>
+    <br />
+    <!-- normal 4x3 -->
     <canvas id="canvas_mix" width="640px" height="480px" style="border: 1px solid black;" ></canvas>
+    <!-- -->
+    <!--- wide
+    <canvas id="canvas_mix" width="960px" height="480px" style="border: 1px solid black;" ></canvas>
+    -->
+    <!--- tall
+    <canvas id="canvas_mix" width="240px" height="480px" style="border: 1px solid black;" ></canvas>
+    -->
+
   </div>
   <div>
     mixed video stream<br />
@@ -31,8 +55,10 @@
   let canvasMix = document.getElementById('canvas_mix');
   let remoteContainer = document.getElementById('video_container');
   let mixVideo = document.getElementById('mix_video');
+  let canvasSizeSelect = document.getElementById('canvas_size_select');
 
   let mcu = new BrowserMCU();
+  //let isMixStarted = false;
   function initMcu() {
     // --- init 1 by 1 ----
     //mcu.setCanvas(canvasMix);
@@ -55,6 +81,8 @@
 
   let localStreams = [];
   function addVideo() {
+    startMix();
+
     getDeviceStream({video: true, audio: true})
     .then(function (stream) { // success
       localStreams.push(stream);
@@ -66,6 +94,20 @@
       console.error('getUserMedia error:', error);
       return;
     });
+  }
+
+  function removeVideo() {
+    if (! mcu.isMixStarted()) {
+      return;
+    }
+
+    let stream = localStreams.shift();
+    if (stream) {
+      mcu.removeRemoteVideo(stream);
+      mcu.removeRemoteAudio(stream);
+      stopStream(stream);
+      stream = null;
+    }
   }
 
   function getDeviceStream(option) {
@@ -104,12 +146,68 @@
     }
   }
 
+  function startMix() {
+    if (! mcu.isMixStarted()) {
+      mcu.startMix();
+      mixVideo.srcObject = mcu.getMixStream();
+      mixVideo.play();
+      mixVideo.volume = 0;
+      //isMixStarted = true;
+    }
+  }
+
+  function stopMix() {
+    if (mcu.isMixStarted()) {
+      mixVideo.pause();
+      mixVideo.srcObject = null;
+      mcu.stopMix();
+      //isMixStarted = false;
+    }
+  }
+
+  function stopAll() {
+    stopMix();
+
+    for (let key in localStreams) {
+      let stream = localStreams[key];
+      mcu.removeRemoteVideo(stream);
+      mcu.removeRemoteAudio(stream);
+      stopStream(stream);
+      delete localStreams[key];
+      stream = null;
+    }
+
+    localStreams = [];
+  }
+
+  function stopStream(stream) {
+    let tracks = stream.getTracks();
+    if (! tracks) {
+      console.warn('NO tracks');
+      return;
+    }
+
+    for (let track of tracks) {
+      track.stop();
+    }
+  }
+
+  function canvasSizeSelectChanged() {
+    let sizeString = canvasSizeSelect.options[canvasSizeSelect.selectedIndex].value;
+    console.log('Canvas size=' + sizeString);
+    let values = sizeString.split('x');
+    canvasMix.width = Number(values[0]);
+    canvasMix.height = Number(values[1]);
+
+    mcu.updateCanvasSize();
+  }
+
   // ========== initilaise onload ========
   initMcu();
-  mcu.startMix();
-  mixVideo.srcObject = mcu.getMixStream();
-  mixVideo.play();
-  mixVideo.volume = 0;
+  //mcu.startMix();
+  //mixVideo.srcObject = mcu.getMixStream();
+  //mixVideo.play();
+  //mixVideo.volume = 0;
   
   console.log('=== ready ==='); 
 

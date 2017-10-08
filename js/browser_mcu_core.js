@@ -17,7 +17,7 @@
 //  DONE - chage FPS
 //  DONE - support horz/vert count flexible (2x1, 3x2, 4x3, 5x4)
 //  NOT HERE. should be done with PeerConnection.  - change bandwidth
-//  - support free size Canvas
+//  DONE - support free size Canvas
 //
 //  - support multiple video for same peer 
 //  - support multiple audio for same peer
@@ -48,20 +48,19 @@ var BrowserMCU = function() {
   let videoContainer = null;
   
   const MIX_CAPTURE_FPS = 15;
-  //const canvasMix = document.getElementById('canvas_mix');
-  //const ctxMix = canvasMix.getContext('2d');
-  //ctxMix.fillStyle = 'rgb(128, 128, 255)';
   let canvasMix = null;
   let ctxMix = null;
   let animationId = null;
   let keepAnimation = false;
+
   let mixWidth = 320;
   let mixHeight = 240;
-  let remoteVideoWidthRate = 16; // 16:9
-  let remoteVideoHeightRate = 9; // 16:9
+  //let remoteVideoWidthRate = 16; // 16:9
+  //let remoteVideoHeightRate = 9; // 16:9
+  let remoteVideoWidthRate = 4; // 4:3
+  let remoteVideoHeightRate = 3; // 4:3
   let remoteVideoUnit = 20; // NOTE: seems no effect
-    // remoteVideoWidth = remoteVideoWidthRate*remoteVideoUnit = 16*20 = 320
-    // remoteVideoHeight = remoteVideoHeightRate*remoteVideoUnit = 9*20 = 180
+
   let frameRate = MIX_CAPTURE_FPS; // Frame per second
   let hideRemoteVideoFlag = false; // Hide Remote Video
 
@@ -117,9 +116,18 @@ var BrowserMCU = function() {
     hideRemoteVideoFlag = hideFlag;
   }
 
+  // --- change canvas sise ---
+  this.updateCanvasSize = function() {
+    if (canvasMix) {
+      mixWidth = canvasMix.width;
+      mixHeight = canvasMix.height;
+
+      _calcGridHorzVert();
+    }
+  }
+
   // --- start/stop Mix ----
   this.startMix = function() {
-    //mixStream = canvasMix.captureStream(MIX_CAPTURE_FPS);
     mixStream = canvasMix.captureStream(frameRate);
     if (audioMode === BrowserMCU.AUDIO_MODE_ALL) {
       mixAllOutputNode = audioContext.createMediaStreamDestination();
@@ -151,6 +159,23 @@ var BrowserMCU = function() {
     keepAnimation = false;
 
     console.log('--stop mix and capture stream--');
+  }
+
+  this.isMixStarted = function() {
+    if (mixStream) {
+      if (! animationId) {
+        console.warn('WARN: mcu state NOT certain');
+      }
+
+      return true;
+    }
+    else {
+      if (animationId) {
+        console.warn('WARN: mcu state NOT certain');
+      }
+
+      return false;
+    }
   }
 
   function _stopStream(stream) {
@@ -196,28 +221,17 @@ var BrowserMCU = function() {
   }
 
   function _drawVideoGridWithClop(ctx, video, destLeft, destTop, gridWidth, gridHeight) {
+    //const HORZ_RATIO = 4;
+    //const VERT_RATIO = 3;
+    const HORZ_RATIO = 1;
+    const VERT_RATIO = 1;
     const gridRatio = gridWidth / gridHeight;
-    const gridRatioAdjust = gridRatio / (4 / 3);
-    //console.log('gridRatio=' + gridRatio + '  adjust=' + gridRatioAdjust);
 
     // === make 4:3 area ====
-    //const horzUnit = video.videoWidth / 4;
-    //const vertUnit = video.videoHeight / 3;
-    const horzUnit = video.videoWidth / 4 / gridRatioAdjust;
-    const vertUnit = video.videoHeight / 3;
-    let unit = 240;
+    let unit = 240; // ANY Number is OK
 
-    if (horzUnit > vertUnit) {
-      // -- landscape, so clip side --
-      unit = vertUnit;
-    }
-    else {
-      // --- portrait, so cut top/bottom -- 
-      unit = horzUnit;
-    }
-
-    const srcWidth = unit * 4 * gridRatioAdjust;
-    const srcHeight = unit * 3;
+    const srcWidth = unit * gridRatio; // OK
+    const srcHeight = unit; // OK
     const xCenter = video.videoWidth / 2;
     const yCenter =  video.videoHeight / 2;
     const srcLeft = xCenter - (srcWidth /2);
@@ -242,6 +256,17 @@ var BrowserMCU = function() {
       console.warn('TOO MANY mebers. max=' + MAX_MEMBER_COUNT);
     }
 
+    // -- Fix calc rule for 4x3 canvas --
+    //_calcGridHorzVertNormal();
+
+    // -- flexible calc rule for flex canvas ---
+    _calcGridHorzVertFlex();
+
+    gridWidth = mixWidth / horzCount;
+    gridHeight = mixHeight / vertCount;
+  }
+
+  function _calcGridHorzVertNormal() {
     if (memberCount > 30) {
       horzCount = 6;
       vertCount = 6;
@@ -286,9 +311,38 @@ var BrowserMCU = function() {
       horzCount = 1;
       vertCount = 1;
     }
+  }
 
-    gridWidth = mixWidth / horzCount;
-    gridHeight = mixHeight / vertCount;
+  function _calcGridHorzVertFlex() {
+    const HORZ_MODULATE = (3.0 / 4.0);
+    let tmpHorzCount = 1;
+    let tmpVertCount = 1;
+    while (memberCount > tmpHorzCount * tmpVertCount) {
+      let horzExtendHorzCount = tmpHorzCount + 1;
+      let horzExtendVertCount = tmpVertCount;
+      let horzExtendRatio = (mixWidth / horzExtendHorzCount) / (mixHeight / horzExtendVertCount);
+      let vertExtendHorzCount = tmpHorzCount;
+      let vertExtendVertCount = tmpVertCount + 1;
+      let vertExtendRatio = (mixHeight / vertExtendVertCount) / (mixWidth / vertExtendHorzCount);
+      if (horzExtendRatio * HORZ_MODULATE >=  vertExtendRatio) {
+        tmpHorzCount = horzExtendHorzCount;
+        tmpVertCount = horzExtendVertCount;
+        if (memberCount <= tmpHorzCount * (tmpVertCount - 1)) {
+          tmpVertCount = tmpVertCount - 1;
+        }
+      }
+      else {
+        tmpHorzCount = vertExtendHorzCount;
+        tmpVertCount = vertExtendVertCount;
+        if (memberCount <= (tmpHorzCount - 1) * tmpVertCount) {
+          tmpHorzCount = tmpHorzCount - 1;
+        }
+      }
+    }
+
+    horzCount = tmpHorzCount;
+    vertCount = tmpVertCount;
+    return;
   }
 
   // ------- handling remote video --------------
