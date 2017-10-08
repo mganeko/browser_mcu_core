@@ -138,7 +138,7 @@ Core Library
 - [ ] check max video/audio count 
 - [-] change bandwidth <-- this is not for core library
 - [x] support flex height for each mix video (2 for split)
-- [ ] support free size canvas
+- [x] support free size canvas
 - [ ] support multiple video for same peer
 - [ ] support multiple audio for same peer
 
@@ -146,7 +146,8 @@ Sample page
 
 - [ ] choose camera or make fake video for source
 - [ ] make fake audio for source
-- [ ] add / remove source
+- [x] add / remove source
+- [x] chagen canvas size
 - [ ] select audio mode
 - [ ] support multipre output video/audio for AUDIO_MODE_MINUS_ONE mode
 
