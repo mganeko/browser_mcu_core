@@ -151,6 +151,23 @@ var BrowserMCU = function() {
     console.log('--stop mix and capture stream--');
   }
 
+  this.isMixStarted = function() {
+    if (mixStream) {
+      if (! animationId) {
+        console.warn('WARN: mcu state NOT certain');
+      }
+
+      return true;
+    }
+    else {
+      if (animationId) {
+        console.warn('WARN: mcu state NOT certain');
+      }
+
+      return false;
+    }
+  }
+
   function _stopStream(stream) {
     let tracks = stream.getTracks();
     if (! tracks) {
