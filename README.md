@@ -147,7 +147,7 @@ Sample page
 - [ ] choose camera or make fake video for source
 - [ ] make fake audio for source
 - [x] add / remove source
-- [x] chagen canvas size
+- [x] change canvas size
 - [ ] select audio mode
 - [ ] support multipre output video/audio for AUDIO_MODE_MINUS_ONE mode
 
