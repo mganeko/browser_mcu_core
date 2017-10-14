@@ -228,7 +228,9 @@ var BrowserMCU = function() {
     const gridRatio = gridWidth / gridHeight;
 
     // === make 4:3 area ====
-    let unit = 240; // ANY Number is OK
+    //let unit = 240; // NG --> ANY Number is OK
+    let unit = 480; // (if same as Src Height, then 100% size)
+    unit = video.videoHeight;
 
     const srcWidth = unit * gridRatio; // OK
     const srcHeight = unit; // OK
