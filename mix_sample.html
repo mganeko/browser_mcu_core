@@ -15,6 +15,12 @@
 </head>
 <body>
   Browser MCU Core sample<br />
+  <select id="camera_size_select">
+    <option value="default" selected="1">default</option>
+    <option value="VGA">VGA(640x480)</option>
+    <option value="HD">HD(1280x720)</option>
+    <option value="FHD">FullHD(1920x1080)</option>
+  </select>
   <button id="add_video_button"  onclick="addVideo();">Add Video</button>
   <button id="remove_video_button"  onclick="removeVideo();">Remove Video</button>
   &nbsp;
@@ -56,6 +62,7 @@
   let remoteContainer = document.getElementById('video_container');
   let mixVideo = document.getElementById('mix_video');
   let canvasSizeSelect = document.getElementById('canvas_size_select');
+  let cameraSizeSelect = document.getElementById('camera_size_select');
 
   let mcu = new BrowserMCU();
   //let isMixStarted = false;
@@ -83,7 +90,10 @@
   function addVideo() {
     startMix();
 
-    getDeviceStream({video: true, audio: true})
+    const mediaConstraints = getMediaOptions();
+
+    //getDeviceStream({video: true, audio: true})
+    getDeviceStream(mediaConstraints)
     .then(function (stream) { // success
       localStreams.push(stream);
       logStream('localstream', stream);
@@ -94,6 +104,24 @@
       console.error('getUserMedia error:', error);
       return;
     });
+  }
+
+  function getMediaOptions() {
+    let sizeString = cameraSizeSelect.options[cameraSizeSelect.selectedIndex].value;
+
+    let options = { video: true, audio: true};
+    if (sizeString === 'VGA') {
+      options.video = { width: { min: 640, max: 640}, height: { min: 480, max: 480 } };
+    }
+    else if (sizeString === 'HD') {
+      options.video = { width: { min: 1280, max: 1280}, height: { min: 720, max: 720 } };
+    }
+    else if (sizeString === 'FHD') {
+      options.video = { width: { min: 1920, max: 1920}, height: { min: 1080, max: 1080 } };
+    }
+
+    console.log('camera size=' + sizeString, options);
+    return options;
   }
 
   function removeVideo() {
