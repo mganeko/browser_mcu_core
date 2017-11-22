@@ -69,7 +69,7 @@
 * when AUDIO_MODE_MINUS_ONE
   * call addRemoteVideo()
   * call prepareMinusOneStream() for each peer (stream)
-  * call addRemoteAudio()
+  * call addRemoteVideo()
   * call addRemoteAudioMinusOne()
 
 #### Stop  Mix Video/Audio / 合成の停止
@@ -81,11 +81,44 @@
 
 ### Code Samples / コード例
 
+#### Mix Audio Minus One (for meeting)
+
 ```js
 let mcu = new BrowserMCU();
-mcu.setCanvas(document.getElementById('mix_canvas'));
-mcu.setContainer(document.getElementById('video_container');
-mcu.setAudioMode(BrowserMCU.AUDIO_MODE_ALL); //   AUDIO_MODE_NONE, AUDIO_MODE_MINUS_ONE, AUDIO_MODE_ALL
+mcu.init(
+  document.getElementById('mix_canvas'),
+  document.getElementById('video_container',
+  BrowserMCU.AUDIO_MODE_MINUS_ONE   // AUDIO_MODE_NONE, AUDIO_MODE_MINUS_ONE, AUDIO_MODE_ALL
+);
+
+mcu.startMix();
+
+let id1 = 'member1';
+let mexStream1 = mcu.prepareMinusOneStream(id1);
+mcu.addRemoteVideo(remoteStream1);
+mcu.addRemoteAudioMinusOne(id1, remoteStream1);
+
+let id2 = 'member2';
+let mexStream2 = mcu.prepareMinusOneStream(id2);
+mcu.addRemoteVideo(remoteStream2);
+mcu.addRemoteAudioMinusOne(id2, remoteStream2);
+
+let id3 = 'member3';
+let mexStream3 = mcu.prepareMinusOneStream(id3);
+mcu.addRemoteVideo(remoteStream3);
+mcu.addRemoteAudioMinusOne(id3, remoteStream3);
+```
+
+#### Mix All Audio (for recording)
+
+```js
+let mcu = new BrowserMCU();
+mcu.init(
+  document.getElementById('mix_canvas'),
+  document.getElementById('video_container',
+  BrowserMCU.AUDIO_MODE_ALL  // AUDIO_MODE_NONE, AUDIO_MODE_MINUS_ONE, AUDIO_MODE_ALL
+);
+
 mcu.startMix();
 let mixStream = mcu.getMixStream();
 
@@ -99,19 +132,7 @@ mcu.addRemoteVideo(remoteStream3);
 mcu.addRemoteAudio(remoteStream3);  
 ```
 
-or
 
-```js
-let mcu = new BrowserMCU();
-mcu.init(
-  document.getElementById('mix_canvas'),
-  document.getElementById('video_container',
-  BrowserMCU.AUDIO_MODE_ALL
-);
-
-mcu.startMix();
-let mixStream = mcu.getMixStream();
-```
 
 
 ### NOTE / 注意
