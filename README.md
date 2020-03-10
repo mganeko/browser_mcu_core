@@ -94,17 +94,17 @@ mcu.init(
 mcu.startMix();
 
 let id1 = 'member1';
-let mexStream1 = mcu.prepareMinusOneStream(id1);
+let mixStream1 = mcu.prepareMinusOneStream(id1);
 mcu.addRemoteVideo(remoteStream1);
 mcu.addRemoteAudioMinusOne(id1, remoteStream1);
 
 let id2 = 'member2';
-let mexStream2 = mcu.prepareMinusOneStream(id2);
+let mixStream2 = mcu.prepareMinusOneStream(id2);
 mcu.addRemoteVideo(remoteStream2);
 mcu.addRemoteAudioMinusOne(id2, remoteStream2);
 
 let id3 = 'member3';
-let mexStream3 = mcu.prepareMinusOneStream(id3);
+let mixStream3 = mcu.prepareMinusOneStream(id3);
 mcu.addRemoteVideo(remoteStream3);
 mcu.addRemoteAudioMinusOne(id3, remoteStream3);
 ```
