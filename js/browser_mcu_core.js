@@ -39,14 +39,14 @@
 
 "use strict"
 
-var BrowserMCU = function() {
+var BrowserMCU = function () {
   // --- for video mix ---
   const MAX_MEMBER_COUNT = 36;
   let remoteStreams = [];
   let remoteVideos = [];
   let mixStream = null;
   let videoContainer = null;
-  
+
   const MIX_CAPTURE_FPS = 15;
   let canvasMix = null;
   let ctxMix = null;
@@ -69,7 +69,9 @@ var BrowserMCU = function() {
   //const _AUDIO_MODE_MINUS_ONE = 1;
   const _AUDIO_MODE_ALL = 2;
   const AuidoContect = window.AudioContext || window.webkitAudioContext;
-  const audioContext = new AuidoContect(); //new window.AudioContext();
+  //const audioContext = new AuidoContect(); //new window.AudioContext();
+  let audioContext = null; // delay instantiation
+
   let audioMode = _AUDIO_MODE_ALL;
   let inputNodes = [];
   let minusOneOutputNodes = [];
@@ -79,7 +81,7 @@ var BrowserMCU = function() {
 
 
   // --- init MCU ----
-  this.setCanvas = function(canvas) {
+  this.setCanvas = function (canvas) {
     canvasMix = canvas;
     ctxMix = canvasMix.getContext('2d');
     ctxMix.fillStyle = 'rgb(128, 128, 255)';
@@ -87,37 +89,37 @@ var BrowserMCU = function() {
     mixHeight = canvasMix.height;
   }
 
-  this.setContainer = function(container) {
+  this.setContainer = function (container) {
     videoContainer = container;
   }
 
-  this.setAudioMode = function(mode) {
+  this.setAudioMode = function (mode) {
     audioMode = mode;
   }
 
   // --- init at once ---
-  this.init = function(canvas, container, mode) {
+  this.init = function (canvas, container, mode) {
     this.setCanvas(canvas);
     this.setContainer(container);
     this.setAudioMode(mode);
   }
 
   // -- set Frame Rate (FPS) --
-  this.setFrameRate = function(rate) {
+  this.setFrameRate = function (rate) {
     frameRate = rate;
   }
 
   // NOTE: seems no effect
-  this.setRemoteVideoUnit = function(unit) {
+  this.setRemoteVideoUnit = function (unit) {
     remoteVideoUnit = unit;
   }
 
-  this.hideRemoteVideo = function(hideFlag) {
+  this.hideRemoteVideo = function (hideFlag) {
     hideRemoteVideoFlag = hideFlag;
   }
 
   // --- change canvas sise ---
-  this.updateCanvasSize = function() {
+  this.updateCanvasSize = function () {
     if (canvasMix) {
       mixWidth = canvasMix.width;
       mixHeight = canvasMix.height;
@@ -127,7 +129,10 @@ var BrowserMCU = function() {
   }
 
   // --- start/stop Mix ----
-  this.startMix = function() {
+  this.startMix = function () {
+    if (!audioContext) {
+      audioContext = new AuidoContect(); //new window.AudioContext();
+    }
     mixStream = canvasMix.captureStream(frameRate);
     if (audioMode === BrowserMCU.AUDIO_MODE_ALL) {
       mixAllOutputNode = audioContext.createMediaStreamDestination();
@@ -140,7 +145,7 @@ var BrowserMCU = function() {
     console.log('--start mix and capture stream--');
   }
 
-  this.stopMix = function() {
+  this.stopMix = function () {
     if (mixAllOutputNode) {
       // NG mixAllOutputNode.stop();
       audioMixAllStream = null;
@@ -161,9 +166,9 @@ var BrowserMCU = function() {
     console.log('--stop mix and capture stream--');
   }
 
-  this.isMixStarted = function() {
+  this.isMixStarted = function () {
     if (mixStream) {
-      if (! animationId) {
+      if (!animationId) {
         console.warn('WARN: mcu state NOT certain');
       }
 
@@ -180,7 +185,7 @@ var BrowserMCU = function() {
 
   function _stopStream(stream) {
     let tracks = stream.getTracks();
-    if (! tracks) {
+    if (!tracks) {
       console.warn('NO tracks');
       return;
     }
@@ -190,7 +195,7 @@ var BrowserMCU = function() {
     }
   }
 
-  this.getMixStream = function() {
+  this.getMixStream = function () {
     return mixStream;
   }
 
@@ -202,7 +207,7 @@ var BrowserMCU = function() {
   function _drawMixCanvas() {
     //console.log('--drawMixCanvas--');
     let i = 0;
-    for(let key in remoteVideos) {
+    for (let key in remoteVideos) {
       let video = remoteVideos[key];
       _drawVideoGrid(video, i, horzCount, vertCount);
       i++;
@@ -214,7 +219,7 @@ var BrowserMCU = function() {
   }
 
   function _drawVideoGrid(videoElement, index, horzCount, vertCount) {
-    const destLeft = gridWidth * (index % horzCount); 
+    const destLeft = gridWidth * (index % horzCount);
     const destTop = gridHeight * Math.floor(index / horzCount);
 
     _drawVideoGridWithClop(ctxMix, videoElement, destLeft, destTop, gridWidth, gridHeight);
@@ -235,9 +240,9 @@ var BrowserMCU = function() {
     const srcWidth = unit * gridRatio; // OK
     const srcHeight = unit; // OK
     const xCenter = video.videoWidth / 2;
-    const yCenter =  video.videoHeight / 2;
-    const srcLeft = xCenter - (srcWidth /2);
-    const srcTop = yCenter - (srcHeight /2);
+    const yCenter = video.videoHeight / 2;
+    const srcLeft = xCenter - (srcWidth / 2);
+    const srcTop = yCenter - (srcHeight / 2);
 
     ctx.drawImage(video, srcLeft, srcTop, srcWidth, srcHeight,
       destLeft, destTop, gridWidth, gridHeight
@@ -249,7 +254,7 @@ var BrowserMCU = function() {
   let horzCount = 1;
   let vertCount = 1;
   let gridWidth = 640;
-  let gridHeight =480;
+  let gridHeight = 480;
 
   // --- frexible vert --- horz/vert count flexible (2x1, 3x2, 4x3, 5x4)
   function _calcGridHorzVert() {
@@ -309,7 +314,7 @@ var BrowserMCU = function() {
       horzCount = 2;
       vertCount = 1;
     }
-    else  {
+    else {
       horzCount = 1;
       vertCount = 1;
     }
@@ -326,7 +331,7 @@ var BrowserMCU = function() {
       let vertExtendHorzCount = tmpHorzCount;
       let vertExtendVertCount = tmpVertCount + 1;
       let vertExtendRatio = (mixHeight / vertExtendVertCount) / (mixWidth / vertExtendHorzCount);
-      if (horzExtendRatio * HORZ_MODULATE >=  vertExtendRatio) {
+      if (horzExtendRatio * HORZ_MODULATE >= vertExtendRatio) {
         tmpHorzCount = horzExtendHorzCount;
         tmpVertCount = horzExtendVertCount;
         if (memberCount <= tmpHorzCount * (tmpVertCount - 1)) {
@@ -352,7 +357,7 @@ var BrowserMCU = function() {
     return Object.keys(remoteVideos).length;
   }
 
-  this.addRemoteVideo = function(stream) {
+  this.addRemoteVideo = function (stream) {
     // --- check for double add ---
     const videoId = "remotevideo_" + stream.id;
     let existRemoteVideo = document.getElementById(videoId); //'remotevideo_' + event.stream.id);
@@ -366,8 +371,8 @@ var BrowserMCU = function() {
     remoteVideo.style.border = '1px solid black';
     //remoteVideo.style.width = "320px"; // 16x20; //"480px"; // 16x30
     //remoteVideo.style.height = "180px"; // 9x20; //"270px"; // 9x30
-    remoteVideo.style.width = remoteVideoWidthRate * remoteVideoUnit + 'px'; 
-    remoteVideo.style.height = remoteVideoHeightRate * remoteVideoUnit + 'px'; 
+    remoteVideo.style.width = remoteVideoWidthRate * remoteVideoUnit + 'px';
+    remoteVideo.style.height = remoteVideoHeightRate * remoteVideoUnit + 'px';
 
     // to hide :: remoteVideo.style.display = 'none'; // for Chrome (hidden NG)
     if (hideRemoteVideoFlag) {
@@ -387,7 +392,7 @@ var BrowserMCU = function() {
     _clearMixCanvas();
   }
 
-  this.removeRemoteVideo = function(stream) {
+  this.removeRemoteVideo = function (stream) {
     const videoId = "remotevideo_" + stream.id;
     let remoteVideo = document.getElementById(videoId); //'remotevideo_' + event.stream.id);
     remoteVideo.pause();
@@ -414,9 +419,9 @@ var BrowserMCU = function() {
     _clearMixCanvas();
   }
 
-  this.removeAllRemoteVideo = function() {
+  this.removeAllRemoteVideo = function () {
     console.log('===== removeAllRemoteVideo ======');
-    for(let key in remoteVideos) {
+    for (let key in remoteVideos) {
       let video = remoteVideos[key];
       video.pause();
       video.srcObject = null;
@@ -424,7 +429,7 @@ var BrowserMCU = function() {
     }
     remoteVideos = [];
 
-    for(let key in remoteStreams) {
+    for (let key in remoteStreams) {
       let stream = remoteStreams[key];
       _stopStream(stream);
     }
@@ -435,7 +440,7 @@ var BrowserMCU = function() {
   }
 
   // --- handling remote audio ---
-  this.addRemoteAudio = function(stream) {
+  this.addRemoteAudio = function (stream) {
     console.log('addRemoteAudio()');
 
     if (audioMode === BrowserMCU.AUDIO_MODE_NONE) {
@@ -471,7 +476,7 @@ var BrowserMCU = function() {
     }
   }
 
-  this.removeRemoteAudio = function(stream) {
+  this.removeRemoteAudio = function (stream) {
     let remoteNode = inputNodes[stream.id];
     if (remoteNode) {
       remoteNode.disconnect(mixAllOutputNode);
@@ -482,16 +487,16 @@ var BrowserMCU = function() {
     }
   }
 
-  this.removeAllRemoteAudio = function() {
+  this.removeAllRemoteAudio = function () {
     console.log('===== removeAllRemoteAudio ======');
-    for(let key in inputNodes) {
+    for (let key in inputNodes) {
       let remoteNode = inputNodes[key];
       remoteNode.disconnect(mixAllOutputNode);
     }
     inputNodes = [];
   }
 
-  this.prepareMinusOneStream = function(peerId) {
+  this.prepareMinusOneStream = function (peerId) {
     let stream = minusOneStreams[peerId];
     if (stream) {
       console.warn('minusOneStream ALREADY EXIST for peerId:' + peerId);
@@ -524,17 +529,17 @@ var BrowserMCU = function() {
     return newAudioMixStream;
   }
 
-  this.getMinusOneStream = function(peerId) {
+  this.getMinusOneStream = function (peerId) {
     let stream = minusOneStreams[peerId];
-    if (! stream) {
+    if (!stream) {
       console.warn('minusOneStream NOT EXIST for peerId:' + peerId);
     }
     return stream;
   }
 
-  this.addRemoteAudioMinusOne = function(peerId, stream) {
+  this.addRemoteAudioMinusOne = function (peerId, stream) {
     let audioTracks = stream.getAudioTracks();
-    if (audioTracks && (audioTracks.length > 0))  {
+    if (audioTracks && (audioTracks.length > 0)) {
       console.log('stream has audioStream. audio track count = ' + audioTracks.length);
       console.log(' stream.id=' + stream.id + ' , track.id=' + audioTracks[0].id);
 
@@ -558,7 +563,7 @@ var BrowserMCU = function() {
     }
   }
 
-  this.removeRemoteAudioMinusOne = function(peerId) {
+  this.removeRemoteAudioMinusOne = function (peerId) {
     // -- remove from other outputs ----
     let thisMicNode = inputNodes[peerId];
     if (thisMicNode) {
@@ -609,7 +614,7 @@ var BrowserMCU = function() {
     }
   }
 
-  this.removeAllRemoteAudioMinusOne = function() {
+  this.removeAllRemoteAudioMinusOne = function () {
     for (let key in minusOneStreams) {
       this.removeRemoteAudioMinusOne(key);
     }
