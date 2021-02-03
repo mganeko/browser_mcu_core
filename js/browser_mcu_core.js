@@ -37,6 +37,14 @@
 //   DONE - removeRemoteAudioMinusOne(peerid)
 //   DONE - removeAllRemoteAudioMinusOne()
 
+// --- use VideoReader ---
+// - setup VideoReader
+//   - log frame event
+// - remove VideoReader
+// - draw with VideoReader
+// - stop requestAnimationFrame
+
+
 "use strict"
 
 var BrowserMCU = function () {
@@ -46,6 +54,10 @@ var BrowserMCU = function () {
   let remoteVideos = [];
   let mixStream = null;
   let videoContainer = null;
+
+  // -- use VideoReader --
+  let videoReaders = [];
+  // -- use VideoReader --
 
   const MIX_CAPTURE_FPS = 15;
   let canvasMix = null;
@@ -205,17 +217,17 @@ var BrowserMCU = function () {
   }
 
   function _drawMixCanvas() {
-    //console.log('--drawMixCanvas--');
-    let i = 0;
-    for (let key in remoteVideos) {
-      let video = remoteVideos[key];
-      _drawVideoGrid(video, i, horzCount, vertCount);
-      i++;
-    }
+    // //console.log('--drawMixCanvas--');
+    // let i = 0;
+    // for (let key in remoteVideos) {
+    //   let video = remoteVideos[key];
+    //   _drawVideoGrid(video, i, horzCount, vertCount);
+    //   i++;
+    // }
 
-    if (keepAnimation) {
-      window.requestAnimationFrame(_drawMixCanvas);
-    }
+    // if (keepAnimation) {
+    //   window.requestAnimationFrame(_drawMixCanvas);
+    // }
   }
 
   function _drawVideoGrid(videoElement, index, horzCount, vertCount) {
@@ -390,6 +402,9 @@ var BrowserMCU = function () {
     remoteVideos[stream.id] = remoteVideo;
     _calcGridHorzVert();
     _clearMixCanvas();
+
+    // -- use VideoReader --
+    _prepareVideoReader(stream, stream.id);
   }
 
   this.removeRemoteVideo = function (stream) {
@@ -403,20 +418,20 @@ var BrowserMCU = function () {
     if (video !== remoteVideo) {
       console.error('VIDEO element NOT MATCH');
     }
-    // NG //console.log('Before Delete video len=' + remoteVideos.length);
-    console.log('Before Delete video keys=' + Object.keys(remoteVideos).length);
-    delete remoteVideos[stream.id];
-    // NG //console.log('After Delete video len=' + remoteVideos.length);
-    console.log('After Delete video keys=' + Object.keys(remoteVideos).length);
 
-    // NG //console.log('Before Delete Stream len=' + remoteStreams.length);
-    console.log('Before Delete Stream keys=' + Object.keys(remoteStreams).length);
+    //console.log('Before Delete video keys=' + Object.keys(remoteVideos).length);
+    delete remoteVideos[stream.id];
+    //console.log('After Delete video keys=' + Object.keys(remoteVideos).length);
+
+    //console.log('Before Delete Stream keys=' + Object.keys(remoteStreams).length);
     delete remoteStreams[stream.id];
-    // NG //console.log('After Delete Stream len=' + remoteStreams.length);
-    console.log('After Delete Stream keys=' + Object.keys(remoteStreams).length);
+    //console.log('After Delete Stream keys=' + Object.keys(remoteStreams).length);
 
     _calcGridHorzVert();
     _clearMixCanvas();
+
+    // -- use VideoReader --
+    _removeVideoReader(stream.id);
   }
 
   this.removeAllRemoteVideo = function () {
@@ -437,6 +452,88 @@ var BrowserMCU = function () {
 
     _calcGridHorzVert();
     _clearMixCanvas();
+
+    // -- use VideoReader --
+    _removeAllVideoReader();
+  }
+
+  // --- use VideoReader ---
+  function _prepareVideoReader(stream, id) {
+    // todo: take care of no videoTracks
+
+    const videoTrack = stream.getVideoTracks()[0];
+    const videoReader = new VideoTrackReader(videoTrack);
+    videoReaders[id] = videoReader;
+    videoReader.start(async (videoFrame) => {
+      //console.log('videoFrame id=%s', id);
+
+      const index = _getIndexFromid(id);
+
+      const imageBitmap = await videoFrame.createImageBitmap();
+      _drawImageGrid(imageBitmap, index, horzCount, vertCount)
+      //_drawImageGridWithClop(ctxMix, imageBitmap, 0, 0, gridWidth, gridHeight);
+
+      imageBitmap.close();
+      videoFrame.close();
+    })
+  }
+
+  function _removeVideoReader(id) {
+    const videoReader = videoReaders[id];
+    videoReader.stop();
+    delete videoReaders[id];
+  }
+
+  function _removeAllVideoReader() {
+    for (let key in videoReaders) {
+      const videoReader = videoReaders[key];
+      videoReader.stop();
+    }
+    videoReaders = [];
+  }
+
+  function _getIndexFromid(id) {
+    let i = 0;
+    for (let key in remoteVideos) {
+      if (key === id) {
+        return i;
+      }
+
+      i++;
+    }
+
+    console.error('ERROR id not match');
+  }
+
+  function _drawImageGrid(image, index, horzCount, vertCount) {
+    const destLeft = gridWidth * (index % horzCount);
+    const destTop = gridHeight * Math.floor(index / horzCount);
+
+    _drawImageGridWithClop(ctxMix, image, destLeft, destTop, gridWidth, gridHeight);
+  }
+
+  function _drawImageGridWithClop(ctx, image, destLeft, destTop, gridWidth, gridHeight) {
+    //const HORZ_RATIO = 4;
+    //const VERT_RATIO = 3;
+    const HORZ_RATIO = 1;
+    const VERT_RATIO = 1;
+    const gridRatio = gridWidth / gridHeight;
+
+    // === make 4:3 area ====
+    //let unit = 240; // NG --> ANY Number is OK
+    let unit = 480; // (if same as Src Height, then 100% size)
+    unit = image.height;
+
+    const srcWidth = unit * gridRatio; // OK
+    const srcHeight = unit; // OK
+    const xCenter = image.width / 2;
+    const yCenter = image.height / 2;
+    const srcLeft = xCenter - (srcWidth / 2);
+    const srcTop = yCenter - (srcHeight / 2);
+
+    ctx.drawImage(image, srcLeft, srcTop, srcWidth, srcHeight,
+      destLeft, destTop, gridWidth, gridHeight
+    );
   }
 
   // --- handling remote audio ---
