@@ -38,12 +38,15 @@
 //   DONE - removeAllRemoteAudioMinusOne()
 
 // --- use VideoReader ---
-// - setup VideoReader
-//   - log frame event
-// - remove VideoReader
-// - draw with VideoReader
-// - stop requestAnimationFrame
-
+// - DONE: setup VideoReader
+//   - DONE: log frame event
+// - calc index and store it
+// - DONE: remove VideoReader
+// - DONE: draw with VideoReader
+// - DONE: stop requestAnimationFrame
+// - OK: try hidden window (Greate!)
+// - DONE: donot use video element
+//   - mayby: avoid add same stream twice 
 
 "use strict"
 
@@ -51,7 +54,7 @@ var BrowserMCU = function () {
   // --- for video mix ---
   const MAX_MEMBER_COUNT = 36;
   let remoteStreams = [];
-  let remoteVideos = [];
+  //let remoteVideos = [];
   let mixStream = null;
   let videoContainer = null;
 
@@ -152,7 +155,7 @@ var BrowserMCU = function () {
       mixStream.addTrack(audioMixAllStream.getAudioTracks()[0]);
     }
 
-    animationId = window.requestAnimationFrame(_drawMixCanvas);
+    //animationId = window.requestAnimationFrame(_drawMixCanvas);
     keepAnimation = true;
     console.log('--start mix and capture stream--');
   }
@@ -180,16 +183,16 @@ var BrowserMCU = function () {
 
   this.isMixStarted = function () {
     if (mixStream) {
-      if (!animationId) {
-        console.warn('WARN: mcu state NOT certain');
-      }
+      // if (!animationId) {
+      //   console.warn('WARN: mcu state NOT certain');
+      // }
 
       return true;
     }
     else {
-      if (animationId) {
-        console.warn('WARN: mcu state NOT certain');
-      }
+      // if (animationId) {
+      //   console.warn('WARN: mcu state NOT certain');
+      // }
 
       return false;
     }
@@ -366,18 +369,25 @@ var BrowserMCU = function () {
 
   // ------- handling remote video --------------
   function _getRemoteVideoCount() {
-    return Object.keys(remoteVideos).length;
+    //return Object.keys(remoteVideos).length;
+    return Object.keys(remoteStreams).length;
   }
 
   this.addRemoteVideo = function (stream) {
     // --- check for double add ---
-    const videoId = "remotevideo_" + stream.id;
-    let existRemoteVideo = document.getElementById(videoId); //'remotevideo_' + event.stream.id);
-    if (existRemoteVideo) {
+    // const videoId = "remotevideo_" + stream.id;
+    // let existRemoteVideo = document.getElementById(videoId); //'remotevideo_' + event.stream.id);
+    // if (existRemoteVideo) {
+    //   console.warn('remote video ALREADY EXIST stream.id=' + stream.id);
+    //   return;
+    // }
+    const existingStream = remoteStreams[stream.id];
+    if (existingStream) {
       console.warn('remote video ALREADY EXIST stream.id=' + stream.id);
       return;
     }
 
+    /*---- STOP using video Element ----
     let remoteVideo = document.createElement('video');
     remoteVideo.id = 'remotevideo_' + stream.id;
     remoteVideo.style.border = '1px solid black';
@@ -393,13 +403,14 @@ var BrowserMCU = function () {
     }
     //remoteVideo.controls = true;
 
-    remoteVideo.srcObject = stream;
+    //remoteVideo.srcObject = stream;
     videoContainer.appendChild(remoteVideo);
     remoteVideo.volume = 0;
-    remoteVideo.play();
+    //remoteVideo.play();
+    ---- STOP using video Element ---*/
 
     remoteStreams[stream.id] = stream;
-    remoteVideos[stream.id] = remoteVideo;
+    //remoteVideos[stream.id] = remoteVideo;
     _calcGridHorzVert();
     _clearMixCanvas();
 
@@ -408,6 +419,7 @@ var BrowserMCU = function () {
   }
 
   this.removeRemoteVideo = function (stream) {
+    /*---- STOP using video Element ----
     const videoId = "remotevideo_" + stream.id;
     let remoteVideo = document.getElementById(videoId); //'remotevideo_' + event.stream.id);
     remoteVideo.pause();
@@ -422,6 +434,7 @@ var BrowserMCU = function () {
     //console.log('Before Delete video keys=' + Object.keys(remoteVideos).length);
     delete remoteVideos[stream.id];
     //console.log('After Delete video keys=' + Object.keys(remoteVideos).length);
+    ---- STOP using video Element ---*/
 
     //console.log('Before Delete Stream keys=' + Object.keys(remoteStreams).length);
     delete remoteStreams[stream.id];
@@ -436,13 +449,13 @@ var BrowserMCU = function () {
 
   this.removeAllRemoteVideo = function () {
     console.log('===== removeAllRemoteVideo ======');
-    for (let key in remoteVideos) {
-      let video = remoteVideos[key];
-      video.pause();
-      video.srcObject = null;
-      videoContainer.removeChild(video);
-    }
-    remoteVideos = [];
+    // for (let key in remoteVideos) {
+    //   let video = remoteVideos[key];
+    //   video.pause();
+    //   video.srcObject = null;
+    //   videoContainer.removeChild(video);
+    // }
+    // remoteVideos = [];
 
     for (let key in remoteStreams) {
       let stream = remoteStreams[key];
@@ -459,28 +472,31 @@ var BrowserMCU = function () {
 
   // --- use VideoReader ---
   function _prepareVideoReader(stream, id) {
-    // todo: take care of no videoTracks
+    const tracks = stream.getVideoTracks();
+    if (tracks.length < 1) {
+      return;
+    }
 
-    const videoTrack = stream.getVideoTracks()[0];
+    const videoTrack = tracks[0];
     const videoReader = new VideoTrackReader(videoTrack);
     videoReaders[id] = videoReader;
     videoReader.start(async (videoFrame) => {
       //console.log('videoFrame id=%s', id);
-
-      const index = _getIndexFromid(id);
-
-      const imageBitmap = await videoFrame.createImageBitmap();
-      _drawImageGrid(imageBitmap, index, horzCount, vertCount)
-      //_drawImageGridWithClop(ctxMix, imageBitmap, 0, 0, gridWidth, gridHeight);
-
-      imageBitmap.close();
+      if (keepAnimation) {
+        const index = _getIndexFromid(id);
+        const imageBitmap = await videoFrame.createImageBitmap();
+        _drawImageGrid(imageBitmap, index, horzCount, vertCount)
+        imageBitmap.close();
+      }
       videoFrame.close();
-    })
+    });
   }
 
   function _removeVideoReader(id) {
     const videoReader = videoReaders[id];
-    videoReader.stop();
+    if (videoReader.readyState === "started") {
+      videoReader.stop();
+    }
     delete videoReaders[id];
   }
 
@@ -494,7 +510,8 @@ var BrowserMCU = function () {
 
   function _getIndexFromid(id) {
     let i = 0;
-    for (let key in remoteVideos) {
+    //for (let key in remoteVideos) {
+    for (let key in remoteStreams) {
       if (key === id) {
         return i;
       }
